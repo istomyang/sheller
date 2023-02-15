@@ -1,2 +1,2 @@
 # sheller
-Sheller is a shell developer friendly library based on function.
+Sheller is a bash-shell utils.
