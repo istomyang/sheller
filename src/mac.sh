@@ -63,6 +63,24 @@ function s_proxy_gui_rm() {
 	echo "OK!"
 }
 
+function s_proxy_gui_gen_cmd() {
+	su_check_help "$@"
+	if (($? == 1)); then
+		cat <<'EOF'
+Usage: `s_proxy_gui_gen_cmd` or `s_proxy_gui_gen_cmd "Thunderbolt Bridge"`.
+
+the first param you can get by `networksetup listallnetworkservices`.
+EOF
+		return
+	fi
+	local service=${2:-$(networksetup listallnetworkservices | tail -n +4)}
+	networksetup -getwebproxy "$service" | awk 'BEGIN{FS=": "; host=""; port=""} { if($(NF-1) ~ /^Server/) {host=$(NF)} else if($(NF-1) ~ /^Port/) {port=$(NF)} } END{ print host":"port }'
+
+	local hp
+	hp=$(networksetup -getwebproxy Wi-Fi | awk 'BEGIN{FS=": "; host=""; port=""} { if($(NF-1) ~ /^Server/) {host=$(NF)} else if($(NF-1) ~ /^Port/) {port=$(NF)} } END{ print host":"port }')
+	echo "export https_proxy=http://${hp} http_proxy=http://${hp} all_proxy=socks5://${hp}"
+}
+
 #################################################################
 #######                                                 #########
 #######                     自定义                       #########
