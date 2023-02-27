@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC1091
-source utils.sh
+source lib/common.sh
 
 function s_git_in() {
 	su_check_help "$@"

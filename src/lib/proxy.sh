@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC1091
+source lib/common.sh
+
 PROXY_DEFAULT_HOST="192.168.2.100"
 PROXY_DEFAULT_PORT=10809 # should ensure same port with http and https.
 
@@ -23,6 +26,7 @@ EOF
 	export https_proxy="http://$host:$port"
 	export HTTPS_PROXY="http://$host:$port"
 	export ALL_PROXY="socks5://$host:$port"
+	export all_proxy="socks5://$host:$port"
 	echo "OK!"
 }
 
@@ -36,6 +40,14 @@ EOF
 }
 
 function s_proxy_rm() {
-	unset -v http_proxy HTTP_PROXY https_proxy HTTPS_PROXY ALL_PROXY
+	unset -v http_proxy HTTP_PROXY https_proxy HTTPS_PROXY ALL_PROXY all_proxy
 	echo "OK!"
+}
+
+function s_proxy_check_google() {
+	curl -X GET -I "www.google.com"
+}
+
+function s_proxy_print_cmd() {
+	echo "export https_proxy=${https_proxy} http_proxy=${https_proxy} all_proxy=${all_proxy}"
 }

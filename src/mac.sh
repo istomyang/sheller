@@ -1,6 +1,77 @@
 #!/usr/bin/env bash
 
-alias mp="multipass"
+# shellcheck disable=SC1091
+source lib/common.sh
+
+# shellcheck disable=SC1091
+source lib/git.sh
+
+# shellcheck disable=SC1091
+source lib/shell.sh
+
+# shellcheck disable=SC1091
+source lib/proxy.sh
+
+function s_proxy_gui_set() {
+	# All network devices name
+	local networkservices=()
+	local recover_ifs=$IFS
+	local IFS=$'\n'
+	for service in $(networksetup listallnetworkservices | tail -n +2); do
+		# In mac, devices array start with 1.
+		networkservices[$((${#networkservices[@]} + 1))]=$service
+	done
+	IFS=$recover_ifs
+
+	local host=${1:-$PROXY_DEFAULT_HOST}
+	local port=${2:-$PROXY_DEFAULT_PORT}
+
+	for ((i = 1; i < $((${#networkservices[@]} + 1)); i++)); do
+		local service=${networkservices[i]}
+		networksetup -setwebproxy "$service" "$host" "$port"
+		networksetup -setwebproxystate "$service" on
+		networksetup -setsecurewebproxy "$service" "$host" "$port"
+		networksetup -setsecurewebproxystate "$service" on
+		networksetup -setsocksfirewallproxy "$service" "$host" "$port"
+		networksetup -setsocksfirewallproxystate "$service" on
+	done
+
+	echo "OK! ($host:$port)"
+}
+
+function s_proxy_gui_rm() {
+	# All network devices name
+	local networkservices=()
+	local recover_ifs=$IFS
+	local IFS=$'\n'
+	for service in $(networksetup listallnetworkservices | tail -n +2); do
+		# In mac, devices array start with 1.
+		networkservices[$((${#networkservices[@]} + 1))]=$service
+	done
+	IFS=$recover_ifs
+
+	for ((i = 1; i < $((${#networkservices[@]} + 1)); i++)); do
+		local service=${networkservices[i]}
+		networksetup -setwebproxy "$service" "" 0
+		networksetup -setwebproxystate "$service" off
+		networksetup -setsecurewebproxy "$service" "" 0
+		networksetup -setsecurewebproxystate "$service" off
+		networksetup -setsocksfirewallproxy "$service" "" 0
+		networksetup -setsocksfirewallproxystate "$service" off
+	done
+
+	echo "OK!"
+}
+
+#################################################################
+#######                                                 #########
+#######                     自定义                       #########
+#######                                                 #########
+#################################################################
+
+# https://gist.github.com/vratiu/9780109
+#PS1="\[\e[0;32m\]\W\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] "
+PS1="\[\e[1;32m\]\W\[\e[0m\] \$ "
 
 export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.ustc.edu.cn/brew.git"
 export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.ustc.edu.cn/homebrew-core.git"
@@ -55,87 +126,7 @@ export RUSTUP_DIST_SERVER=https://mirrors.tuna.tsinghua.edu.cn/rustup
 PATH="$PATH:$JAVA_HOME/bin"
 
 function s_cf() {
-	local dir="$HOME/env"
+	local dir="$HOME"
 	chmod 0755 "$dir/cf.sh"
 	"$dir/cf.sh"
 }
-
-SHELLER_PROXY_HOST="192.168.2.100"
-SHELLER_PROXY_HTTP_PORT=10809
-SHELLER_PROXY_SOCK_PORT=10808
-
-# Exp: s_proxy_cmd_rm
-function s_proxy_cmd_rm() {
-	unset -v http_proxy https_proxy ALL_PROXY
-	if [ "$1" != "-q" ]; then
-		echo "unset cmdline's proxy successfully."
-	fi
-}
-
-function s_proxy_cmd_host() {
-	if [[ "$1" == "help" ]]; then
-		echo "Exp: s_proxy_cmd_host 192.168.2.100"
-		return
-	fi
-	s_proxy_cmd_rm -q
-	export http_proxy="http://${SHELLER_PROXY_HOST}:${SHELLER_PROXY_HTTP_PORT}"
-	export https_proxy="http://${SHELLER_PROXY_HOST}:${SHELLER_PROXY_HTTP_PORT}"
-	export ALL_PROXY="socks5://${SHELLER_PROXY_HOST}:${SHELLER_PROXY_SOCK_PORT}"
-	echo "set cmdline's proxy successfully with host: $SHELLER_PROXY_HOST."
-}
-
-function s_proxy_gui_host() {
-	# All network devices name
-	local networkservices=()
-	local recover_ifs=$IFS
-	local IFS=$'\n'
-	for service in $(networksetup listallnetworkservices | tail -n +2); do
-		# In mac, devices array start with 1.
-		networkservices[$((${#networkservices[@]} + 1))]=$service
-	done
-	IFS=$recover_ifs
-
-	for ((i = 1; i < $((${#networkservices[@]} + 1)); i++)); do
-		local service=${networkservices[i]}
-		networksetup -setwebproxy "$service" "$SHELLER_PROXY_HOST" "$SHELLER_PROXY_HTTP_PORT"
-		networksetup -setwebproxystate "$service" on
-		networksetup -setsecurewebproxy "$service" "$SHELLER_PROXY_HOST" "$SHELLER_PROXY_HTTP_PORT"
-		networksetup -setsecurewebproxystate "$service" on
-		networksetup -setsocksfirewallproxy "$service" "$SHELLER_PROXY_HOST" "$SHELLER_PROXY_SOCK_PORT"
-		networksetup -setsocksfirewallproxystate "$service" on
-	done
-
-	echo "set gui's proxy successfully with host: $SHELLER_PROXY_HOST."
-}
-
-function s_proxy_gui_rm() {
-	# All network devices name
-	local networkservices=()
-	local recover_ifs=$IFS
-	local IFS=$'\n'
-	for service in $(networksetup listallnetworkservices | tail -n +2); do
-		# In mac, devices array start with 1.
-		networkservices[$((${#networkservices[@]} + 1))]=$service
-	done
-	IFS=$recover_ifs
-
-	for ((i = 1; i < $((${#networkservices[@]} + 1)); i++)); do
-		local service=${networkservices[i]}
-		networksetup -setwebproxy "$service" "" 0
-		networksetup -setwebproxystate "$service" off
-		networksetup -setsecurewebproxy "$service" "" 0
-		networksetup -setsecurewebproxystate "$service" off
-		networksetup -setsocksfirewallproxy "$service" "" 0
-		networksetup -setsocksfirewallproxystate "$service" off
-	done
-
-	echo "set gui's proxy successfully with host: $SHELLER_PROXY_HOST."
-}
-
-# function git_clone() {
-#     	if [[ "$1" == "help" ]]; then
-# 		echo "Example: git_clone https://xxxxx.com --depth=1"
-# 		return
-# 	fi
-#     git clone "https://ghproxy.com/$*"
-# }

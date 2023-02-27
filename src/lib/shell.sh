@@ -1,20 +1,11 @@
 #!/usr/bin/env bash
 
-# https://gist.github.com/vratiu/9780109
-#PS1="\[\e[0;32m\]\W\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] "
-PS1="\[\e[1;32m\]\W\[\e[0m\] \$ "
+# shellcheck disable=SC1091
+source lib/common.sh
 
 function s_see_func_usage() {
 	declare -f "$@"
 }
-
-function c() {
-	clear
-}
-
-################################################################
-########################## History #############################
-################################################################
 
 bind '"\e[A": history-search-backward'
 bind '"\e[B": history-search-forward'
