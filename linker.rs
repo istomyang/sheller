@@ -90,11 +90,15 @@ mod tests {
     }
 }
 
+use std::collections::HashSet;
+
 struct Linker {
     output_line_writer: Option<LineWriter<File>>,
     entry_file_name: String,
     output: PathBuf,
     root_dir: PathBuf,
+    // import_files ensures importing once and early.
+    import_files: HashSet<String>,
 }
 
 impl Linker {
@@ -107,6 +111,7 @@ impl Linker {
             entry_file_name,
             root_dir,
             output: PathBuf::from(output),
+            import_files: HashSet::new(),
         }
     }
 
@@ -126,7 +131,8 @@ impl Linker {
     }
 
     fn read_file<P: AsRef<Path>>(&mut self, path: P) {
-        let file = File::open(path).expect("");
+        let p = path.as_ref() as &Path;
+        let file = File::open(p).expect(&format!("cannot open file: {}", p.display()));
         let lines = BufReader::new(file).lines();
         for result_line in lines {
             if let Ok(line) = result_line {
@@ -146,6 +152,11 @@ impl Linker {
         // Unflod
         if line.starts_with("source ") {
             let (_, p) = line.split_at(7);
+            let path = p.to_string();
+            if self.import_files.contains(&path) {
+                return;
+            }
+            self.import_files.insert(path);
             return self.read_file(self.root_dir.join(p).as_path()); // check tail call.
         }
 
