@@ -41,9 +41,26 @@ all:
 	@PLATFORMS=mac,termux,linux $(plts) V=0 $(MAKE) build
 	@$(MAKE) install
 
-### build: Build the project.
+### build: Build the project. example: `PLATFORMS=mac make build`.
 .PHONY: build
 build: build.linker $(foreach plt, $(subst $(COMMA), $(SPACE), $(PLATFORMS)), build.platform.$(plt))
+
+.PHONY: build.platform.%
+build.platform.%:
+	$(eval plt := $*)
+	@echo "$(ARROW_STRING) Build for the platform: $(plt)."
+	@$(OUTPUT_DIR)/$(LINKER_NAME) $(SRC_ENTRY_DIR)/$(plt).sh $(OUTPUT_DIR)/$(plt)_output.sh
+
+.PHONY: build.linker
+build.linker:
+ifeq ($(shell ls $(OUTPUT_DIR)/$(LINKER_NAME) 2>/dev/null),)
+	@echo "$(ARROW_STRING) Build the linker."
+	@mkdir $(OUTPUT_DIR) 2>/dev/null || true
+	@rustc $(ROOT_DIR)/linker.rs -o $(OUTPUT_DIR)/$(LINKER_NAME)
+else
+	@echo "$(ARROW_STRING) command liner has been built."
+endif
+
 
 ### install: Install the build shell file to your user directory and append into the .bashrc.
 .PHONY: install
@@ -63,22 +80,6 @@ install.platform.%: $(OUTPUT_DIR)/%_output.sh
 	$(eval install_path := $(INSTALL_PATH)/$*_helper.sh)
 	$(eval env_file := $(HOME)/.bashrc)
 	@touch $(env_file); cp -fp $(from_path) $(install_path); chmod 755 $(install_path); tee -a $(env_file) <<< "source $(install_path)"
-
-.PHONY: build.platform.%
-build.platform.%:
-	$(eval plt := $*)
-	@echo "$(ARROW_STRING) Build for the platform: $(plt)."
-	@$(OUTPUT_DIR)/$(LINKER_NAME) $(SRC_ENTRY_DIR)/$(plt).sh $(OUTPUT_DIR)/$(plt)_output.sh
-
-.PHONY: build.linker
-build.linker:
-ifeq ($(shell ls $(OUTPUT_DIR)/$(LINKER_NAME) 2>/dev/null),)
-	@echo "$(ARROW_STRING) Build the linker."
-	@mkdir $(OUTPUT_DIR) 2>/dev/null || true
-	@rustc $(ROOT_DIR)/linker.rs -o $(OUTPUT_DIR)/$(LINKER_NAME)
-else
-	@echo "$(ARROW_STRING) command liner has been built."
-endif
 
 ### clean: Clean the build directory.
 .PHONY: clean
