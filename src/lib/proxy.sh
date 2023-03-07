@@ -11,6 +11,7 @@ function s_proxy_set() {
 	if (($? == 1)); then
 		cat <<'EOF'
 Usage: s_proxy_set 192.168.2.100 7890
+			 s_proxy_set 192.168.2.100 7890 7891
 
 Note:
 	Must ensure http/https use same host:port.
@@ -21,12 +22,13 @@ EOF
 
 	local host=${1:-$PROXY_DEFAULT_HOST}
 	local port=${2:-$PROXY_DEFAULT_PORT}
+	local s_port=${3:-$port}
 	export http_proxy="http://$host:$port"
 	export HTTP_PROXY="http://$host:$port"
 	export https_proxy="http://$host:$port"
 	export HTTPS_PROXY="http://$host:$port"
-	export ALL_PROXY="socks5://$host:$port"
-	export all_proxy="socks5://$host:$port"
+	export ALL_PROXY="socks5://$host:$s_port"
+	export all_proxy="socks5://$host:$s_port"
 	echo "OK!"
 }
 
