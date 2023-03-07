@@ -24,4 +24,5 @@ function s_history_delete() {
 		return
 	fi
 	history -c
+	rm -f "$HOME/.bash_history"
 }
