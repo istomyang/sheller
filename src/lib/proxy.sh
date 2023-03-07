@@ -20,7 +20,7 @@ EOF
 	fi
 
 	local host=${1:-$PROXY_DEFAULT_HOST}
-	local port=${1:-$PROXY_DEFAULT_PORT}
+	local port=${2:-$PROXY_DEFAULT_PORT}
 	export http_proxy="http://$host:$port"
 	export HTTP_PROXY="http://$host:$port"
 	export https_proxy="http://$host:$port"
