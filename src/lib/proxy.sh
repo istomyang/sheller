@@ -3,9 +3,6 @@
 # shellcheck disable=SC1091
 source lib/common.sh
 
-PROXY_DEFAULT_HOST="192.168.2.100"
-PROXY_DEFAULT_PORT=10809 # should ensure same port with http and https.
-
 function s_proxy_set() {
 	su_check_help "$@"
 	if (($? == 1)); then
@@ -20,8 +17,8 @@ EOF
 		return
 	fi
 
-	local host=${1:-$PROXY_DEFAULT_HOST}
-	local port=${2:-$PROXY_DEFAULT_PORT}
+	local host=${1:-""}
+	local port=${2:-""}
 	local s_port=${3:-$port}
 	export http_proxy="http://$host:$port"
 	export HTTP_PROXY="http://$host:$port"
@@ -52,4 +49,8 @@ function s_proxy_check_google() {
 
 function s_proxy_print_cmd() {
 	echo "export https_proxy=${https_proxy} http_proxy=${https_proxy} all_proxy=${all_proxy}"
+}
+
+function s_proxy_after_set_minikube() {
+	export NO_PROXY=localhost,127.0.0.1,10.96.0.0/12,192.168.59.0/24,192.168.49.0/24,192.168.39.0/24
 }

@@ -11,7 +11,8 @@ function su_check_help() {
 	#		return
 	# fi
 	# ```
-	if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+	local h=${1:-"-h"}
+	if [[ "$h" == "--help" || "$h" == "-h" ]]; then
 		return 1
 	fi
 }
