@@ -39,7 +39,7 @@ EOF
 }
 
 function s_proxy_rm() {
-	unset -v http_proxy HTTP_PROXY https_proxy HTTPS_PROXY ALL_PROXY all_proxy
+	unset -v http_proxy HTTP_PROXY https_proxy HTTPS_PROXY ALL_PROXY all_proxy NO_PROXY no_proxy
 	echo "OK!"
 }
 
