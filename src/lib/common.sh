@@ -2,6 +2,15 @@
 
 alias c="clear"
 
+export USER_SU_PASSWORD=""
+
+function su_sudo() {
+	if [[ -z "$USER_SU_PASSWORD" ]]; then
+		read -r -p "Enter your sudo password: " USER_SU_PASSWORD
+	fi
+	echo "$USER_SU_PASSWORD" | sudo -S "$@"
+}
+
 function su_check_help() {
 	# Usage:
 	# ```bash
