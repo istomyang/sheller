@@ -17,7 +17,18 @@ source lib/shell.sh
 
 # https://gist.github.com/vratiu/9780109
 #PS1="\[\e[0;32m\]\W\[\e[0m\] \[\e[0;97m\]\$\[\e[0m\] "
-PS1="\[\h \e[1;32m\]\W\[\e[0m\] \$ "
+PS1="[\h \W]\$ "
+
+alias WORKSPACE_ROOT='$HOME/workspaces'
+alias vi="nvim"
+alias cp="cp -i"
+alias mv="mv -i"
+alias rm="rm -i"
+alias dk="docker"
+alias pm="podman"
+alias kubectl="minikube kubectl --"
+
+export KUBE_EDITOR="vi"
 
 function s_close_screen() {
   # In server environment with screen, close screen with 1min not move.
