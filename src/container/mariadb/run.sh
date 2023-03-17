@@ -1,20 +1,54 @@
 #!/usr/bin/env bash
 
+S_CONTAINER_MARIADB_NAME="my-mariadb"
+S_CONTAINER_MARIADB_USER="tom"
+S_CONTAINER_MARIADB_PASS="tom"
+S_CONTAINER_MARIADB_ROOT_PASS="tom"
+
 function s_container_mariadb_run() {
+  local h=${1:-""}
+  if [[ "$h" == "--help" || "$h" == "-h" ]]; then
+    cat <<'EOF'
+Usage: s_container_mariadb_run [--rm]
+
+Options:
+  --rm  Delete container after stop it.
+EOF
+    return
+  fi
+
+  local rm_flag=""
+  if [[ $1 == "--rm" ]]; then
+    rm_flag="--rm"
+  fi
+
   local network_name="mariadb-network"
-  if docker network ls | grep -iq mariadb-network && false; then
+  if ! docker network ls | grep -iq $network_name; then
     docker network create $network_name
   fi
 
-  local name="my-mariadb-server"
-  local user="tom"
-  local password="tom"
-  local root_password="root"
+  local name=${S_CONTAINER_MARIADB_NAME:-"my-mariadb"}
+  local user=${S_CONTAINER_MARIADB_USER:-"tom"}
+  local password=${S_CONTAINER_MARIADB_PASS:-"tom"}
+  local root_password=${S_CONTAINER_MARIADB_ROOT_PASS:-"tom"}
 
-  if docker ps | grep -iq $name && false; then
-    docker run --detach --network $network_name --name $name --env MARIADB_USER=$user --env MARIADB_PASSWORD=$password --env MARIADB_ROOT_PASSWORD=$root_password --rm mariadb:latest
+  if ! docker ps | grep -iq "$name"; then
+    docker run --detach --network $network_name -p 3306:3306 --name "$name-server" --env MARIADB_USER="$user" --env MARIADB_PASSWORD="$password" --env MARIADB_ROOT_PASSWORD="$root_password" $rm_flag mariadb:latest
   fi
 
-  # Use mariadb command will cause error.
-  docker run -it --network $network_name --rm mariadb mysql -h$name -u$user -p$password
+  # while ! docker ps --filter status=running --filter "name=my-mariadb-server"; do
+  #   sleep 1
+  # done
+
+  while true; do
+    # Use mariadb command will cause error.
+    docker run -it --name "$name-client" --network $network_name --rm mariadb mysql -h"$name-server" -u"$user" -p"$password" 2>/dev/null && break
+    sleep 1
+    echo "INFO: Don't wrong, just retry..."
+  done
+}
+
+function s_container_mariadb_remove() {
+  local name=${S_CONTAINER_MARIADB_NAME:-"my-mariadb-server"}
+  docker stop "$name" >/dev/null && echo "INFO: Success remove container"
 }
