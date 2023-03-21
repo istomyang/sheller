@@ -25,7 +25,9 @@ _EOF_
 }
 
 function s_install_podman_config() {
-  local path="$HOME/.config/containers/registries.conf"
+  local dir="$HOME/.config/containers"
+  mkdir -p "$dir"
+  local path="$dir/registries.conf"
   if [[ -e "$path" ]]; then
     echo "Warning: $path is exist, abort operation."
     return
